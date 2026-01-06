@@ -99,3 +99,29 @@ async def fetch_data(ip: str, username: str, password: str) -> Result[ParsedData
             return Ok(get_result.value)
         else:
             return Err(f'Fetch failed after authentication - {get_result.value}')
+
+
+async def get_data_with_token(session: ClientSession, ip: str, token: str) -> Result[ParsedDatas, int]:
+    headers = {"Authorization": f"Bearer {token}"}
+    try:
+        async with session.get(f'http://{ip}/history?time=5', headers=headers) as response:
+            if response.status == 200:
+                data = await response.json()
+                parsed = _parse_received_data(data)
+                return Ok(parsed)
+            else:
+                return Err(response.status)
+    except aiohttp.ClientConnectionError as e:
+        message = e.args[0]
+        if hasattr(message, 'code') and message.code == 302:
+            return Err(302)
+        return Err(500)
+
+
+async def fetch_data_with_token(ip: str, token: str) -> Result[ParsedDatas, str]:
+    async with aiohttp.ClientSession() as session:
+        get_result = await get_data_with_token(session, ip, token)
+        if get_result.is_ok():
+            return Ok(get_result.value)
+        else:
+            return Err(f'Fetch failed - {get_result.value}')
