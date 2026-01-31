@@ -9,7 +9,7 @@ def _parse_value_from_header(header: str, key: str) -> str:
     return header[ch_start:ch_end]
 
 
-def parse_password(header: str, username: str, password: str) -> str | None:
+def parse_password(header: str, username: str, password: str) -> str:
     challenge = _parse_value_from_header(header, "challenge")
     realm = _parse_value_from_header(header, "realm")
     password_md5 = hashlib.md5(
